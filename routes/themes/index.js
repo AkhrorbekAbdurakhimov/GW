@@ -5,7 +5,7 @@ const { Router } = require('express');
 
 const { db } = require('./../../database');
 const { replaceAll } = require('./../../utils');
-const { getThemesListSchema, createThemeSchema } = require('./schema');
+const { getThemesListSchema, changeThemeStatusSchema, createThemeSchema, deleteThemeSchema } = require('./schema');
 
 const ThemesDB = require('./db');
 
@@ -22,6 +22,23 @@ const getThemesList = async (req, res) => {
   const themes = await ThemesDB.getThemesList(v);
 
   return res.status(200).send(themes);
+}
+
+const changeThemeStatus = async (req, res) => {
+  const { error: err, value: v } = changeThemeStatusSchema.validate(req.query);
+  if (err) {
+    return res.status(400).send({
+      error: replaceAll(err.details[0].message, '"', ''),
+      warning: '',
+      message: '',
+    });
+  }
+
+  await ThemesDB.changeThemeStatus([v.processId, v.status]);
+
+  return res.status(200).send({
+    message: "Graduation work status changed successfully"
+  })
 }
 
 const createTheme = async (req, res) => {
@@ -94,7 +111,49 @@ const createTheme = async (req, res) => {
   }
 
   return res.status(200).send({
-    message: "Graduation work successfully inserted"
+    message: "Graduation work was created successfully "
+  })
+
+}
+
+const deleteTheme = async (req, res) => {
+  const { error: err, value: v } = deleteThemeSchema.validate(req.params);
+  if (err) {
+    return res.status(400).send({
+      error: replaceAll(err.details[0].message, '"', ''),
+      warning: '',
+      message: '',
+    });
+  }
+
+  const client = await db.getClient();
+
+  try {
+    await client.query('BEGIN TRANSACTION');
+
+    await client.query(`
+      DELETE FROM
+        diploma.process
+      WHERE
+        theme_id = $1
+    `, [v.themeId]);
+
+    await client.query(`
+      DELETE FROM
+        diploma.themes
+      WHERE
+        id = $1
+    `, [v.themeId]);
+
+    await client.query('COMMIT TRANSACTION')
+
+  } catch (err) {
+    console.log(err);
+    await client.query('ROLLBACK TRANSACTION')
+  }
+
+  return res.status(200).send({
+    message: "Graduation work was deleted successfully"
   })
 
 }
@@ -102,6 +161,9 @@ const createTheme = async (req, res) => {
 const router = Router();
 
 router.get('/list', getThemesList);
-router.post('/create', createTheme);
+router.get('/status', changeThemeStatus)
+
+router.post('/', createTheme);
+router.delete('/:themeId', deleteTheme)
 
 module.exports = router;
