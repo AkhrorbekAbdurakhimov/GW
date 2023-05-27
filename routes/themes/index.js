@@ -25,7 +25,7 @@ const getThemesList = async (req, res) => {
 }
 
 const changeThemeStatus = async (req, res) => {
-  const { error: err, value: v } = changeThemeStatusSchema.validate(req.query);
+  const { error: err, value: v } = changeThemeStatusSchema.validate({ ...req.params, ...req.body });
   if (err) {
     return res.status(400).send({
       error: replaceAll(err.details[0].message, '"', ''),
@@ -161,7 +161,7 @@ const deleteTheme = async (req, res) => {
 const router = Router();
 
 router.get('/list', getThemesList);
-router.get('/status', changeThemeStatus)
+router.patch('/status/:processId', changeThemeStatus)
 
 router.post('/', createTheme);
 router.delete('/:themeId', deleteTheme)

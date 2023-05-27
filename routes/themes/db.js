@@ -7,6 +7,7 @@ class ThemesDB {
     const sql = `
       SELECT	
         t.id,
+        p.id AS "processId",
         title,
         description,
         u1.id AS "studentId",
