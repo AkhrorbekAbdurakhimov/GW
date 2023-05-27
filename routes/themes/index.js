@@ -5,7 +5,16 @@ const { Router } = require('express');
 
 const { db } = require('./../../database');
 const { replaceAll } = require('./../../utils');
-const { getThemesListSchema, changeThemeStatusSchema, createThemeSchema, deleteThemeSchema } = require('./schema');
+const { getThemesListSchema, changeThemeStatusSchema, bindStudentSchema, createThemeSchema, deleteThemeSchema } = require('./schema');
+
+const statuses = [
+  { id: 0, status: 'all' },
+  { id: 1, status: 'not-selected' },
+  { id: 2, status: 'initialized' },
+  { id: 3, status: 'pending' },
+  { id: 4, status: 'accepted' },
+  { id: 5, status: 'declined' },
+]
 
 const ThemesDB = require('./db');
 
@@ -19,9 +28,39 @@ const getThemesList = async (req, res) => {
     });
   }
 
+  v.status = statuses.find(status => status.id === v.statusId).status;
+
   const themes = await ThemesDB.getThemesList(v);
 
   return res.status(200).send(themes);
+}
+
+const bindStudent = async (req, res) => {
+
+  if (req.user.role !== 'student') {
+    res.status(403).send({
+      message: "You can not select the graduation work"
+    })
+  }
+
+  const { error: err, value: v } = bindStudentSchema.validate(req.body);
+  if (err) {
+    return res.status(400).send({
+      error: replaceAll(err.details[0].message, '"', ''),
+      warning: '',
+      message: '',
+    });
+  }  
+
+  await ThemesDB.bindStudentToGw([req.user.id, v.processId]);
+
+  return res.status(200).send({
+    message: "Graduation work was selected successfully"
+  })
+}
+
+const getStatusesList = async (req, res) => {
+  return res.status(200).send(statuses)
 }
 
 const changeThemeStatus = async (req, res) => {
@@ -161,6 +200,8 @@ const deleteTheme = async (req, res) => {
 const router = Router();
 
 router.get('/list', getThemesList);
+router.post('/bind', bindStudent);
+router.get('/status/list', getStatusesList);
 router.patch('/status/:processId', changeThemeStatus)
 
 router.post('/', createTheme);

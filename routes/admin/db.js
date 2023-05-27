@@ -9,6 +9,7 @@ class AdminDB {
 				full_name,
 				TO_CHAR(created_at, 'DD.MM.YYYY HH24:mi:ss'),
 				avatar,
+				capacity,
 				r.title AS role
 			FROM
 				diploma.users u

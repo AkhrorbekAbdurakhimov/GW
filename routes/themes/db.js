@@ -2,7 +2,7 @@ const { db } = require('./../../database');
 
 class ThemesDB {
 
-  static async getThemesList ({ teacherId, studentId }) {
+  static async getThemesList ({ teacherId, studentId, status }) {
 
     const sql = `
       SELECT	
@@ -27,6 +27,7 @@ class ThemesDB {
         diploma.users u2 ON u2.id = p.advisor_id
       WHERE
         t.deleted_at IS NULL AND u1.deleted_at IS NULL AND u2.deleted_at IS NULL
+      ${status !== 'all' ? `AND p.status = '${status}'` : ''}
       ${teacherId ? `AND p.advisor_id = ${teacherId}` : ''}
       ${studentId ? `AND p.attached_user_id = ${studentId}` : ''}
       ORDER BY
@@ -35,6 +36,18 @@ class ThemesDB {
 
     const result = await db.query(sql)
     return result.rows || [];
+  }
+
+  static async bindStudentToGw (params) {
+    await db.query(`
+      UPDATE 
+        diploma.process
+      SET
+        attached_user_id = $1,
+        status = 'initialized'
+      WHERE
+        id = $2
+    `, params)
   }
 
   static async changeThemeStatus (params) {
