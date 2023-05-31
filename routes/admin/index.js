@@ -47,7 +47,7 @@ const getUsers = async (req, res) => {
     });
   }
 
-	const users = await AdminDB.getUsers([v.roleId]);
+	const users = await AdminDB.getUsers(v.roleId);
 
 	return res.status(200).send(users);
 }

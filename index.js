@@ -1,3 +1,5 @@
+const path = require('path');
+
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -6,6 +8,8 @@ const app = express();
 
 const { APP } = require('./config');
 const { authMiddleware } = require('./middlewares/auth');
+
+app.use('/', express.static(path.join(__dirname, 'public')));
 
 app.use(cors());
 app.use(helmet());

@@ -6,7 +6,7 @@ const loginSchema = Joi.object({
 })
 
 const getUsersSchema = Joi.object({
-	roleId: Joi.number().required().allow(1, 2, 3)
+	roleId: Joi.number().required().allow(0, 1, 2, 3)
 })
 
 module.exports = {

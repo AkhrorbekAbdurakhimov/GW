@@ -6,11 +6,23 @@ class AdminDB {
 			SELECT
 				u.id,
 				username,
-				full_name,
-				TO_CHAR(created_at, 'DD.MM.YYYY HH24:mi:ss'),
+				full_name AS "fullName",
+				TO_CHAR(created_at, 'DD.MM.YYYY HH24:mi:ss') AS "joinedAt",
 				avatar,
 				capacity,
-				r.title AS role
+				r.title AS role,
+				gpa,
+				linkedin,
+				faculty,
+				position,
+				(
+					SELECT
+						ARRAY_AGG(title)
+					FROM
+						diploma.skills
+					WHERE
+						id = ANY (u.skill_ids)
+				) AS skills
 			FROM
 				diploma.users u
 			JOIN
@@ -23,25 +35,39 @@ class AdminDB {
 		return result.rows && result.rows.length ? result.rows[0] : null;
   }
 
-	static async getUsers (params) {
+	static async getUsers (role) {
 		const sql  = `
 			SELECT
-				u.id, 
+				u.id,
 				username,
-				r.title AS role,
+				full_name AS "fullName",
+				TO_CHAR(created_at, 'DD.MM.YYYY HH24:mi:ss') AS "joinedAt",
 				avatar,
-				full_name,
 				capacity,
-				TO_CHAR(created_at, 'DD.MM.YYYY hh24:mi:ss') AS created_at
+				r.title AS role,
+				gpa,
+				linkedin,
+				faculty,
+				position,
+				(
+					SELECT
+						ARRAY_AGG(title)
+					FROM
+						diploma.skills
+					WHERE
+						id = ANY (u.skill_ids)
+				) AS skills
 			FROM
 				diploma.users u
 			JOIN
 				diploma.roles r ON r.id = u.role_id
-			WHERE
-				role_id = $1
+			${role ? `
+			WHERE 
+				role_id = ${role}
+			` : ''}
 		`;
 
-		const result = await db.query(sql, params);
+		const result = await db.query(sql);
 		return result.rows || [];
 	}
 }
