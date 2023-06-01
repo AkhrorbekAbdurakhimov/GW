@@ -35,14 +35,17 @@ class AdminDB {
 		return result.rows && result.rows.length ? result.rows[0] : null;
   }
 
-	static async getUsers (role) {
+	static async getUsers (role, host) {
 		const sql  = `
 			SELECT
 				u.id,
 				username,
 				full_name AS "fullName",
 				TO_CHAR(created_at, 'DD.MM.YYYY HH24:mi:ss') AS "joinedAt",
-				avatar,
+				CASE 
+					WHEN avatar IS NOT NULL THEN CONCAT('http://${host}', '/images/', avatar)
+					ELSE NULL 
+				END AS avatar,
 				capacity,
 				r.title AS role,
 				gpa,
@@ -65,10 +68,57 @@ class AdminDB {
 			WHERE 
 				role_id = ${role}
 			` : ''}
+			ORDER BY
+				u.role_id, username
 		`;
 
 		const result = await db.query(sql);
 		return result.rows || [];
+	}
+
+	static async getSkills () {
+		const sql = `
+			SELECT
+				*
+			FROM
+				diploma.skills
+		`;
+
+		const result = await db.query(sql);
+		return result.rows || [];
+	}
+
+	static async registerUser (params) {
+		const sql = `
+			INSERT INTO diploma.users (
+				username, 
+				password,
+				full_name,
+				avatar,
+				role_id,
+				capacity,
+				skill_ids,
+				gpa,
+				linkedin,
+				faculty,
+				position
+			) VALUES (
+				$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+			)
+		`;
+
+		await db.query(sql, params)
+	}
+
+	static async deleteUser (params) {
+		const sql = `
+			DELETE FROM
+				diploma.users
+			WHERE
+				id = $1
+		`;
+
+		await db.query(sql, params)
 	}
 }
 

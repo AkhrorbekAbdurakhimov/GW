@@ -26,12 +26,12 @@ class ThemesDB {
       LEFT JOIN 
         diploma.users u2 ON u2.id = p.advisor_id
       WHERE
-        t.deleted_at IS NULL AND u1.deleted_at IS NULL AND u2.deleted_at IS NULL
+        TRUE
       ${status !== 'all' ? `AND p.status = '${status}'` : ''}
       ${teacherId ? `AND p.advisor_id = ${teacherId}` : ''}
       ${studentId ? `AND p.attached_user_id = ${studentId}` : ''}
       ORDER BY
-        p.created_at DESC
+        p.id
     `;
 
     const result = await db.query(sql)
