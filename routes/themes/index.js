@@ -30,7 +30,7 @@ const getThemesList = async (req, res) => {
 
   v.status = statuses.find(status => status.id === v.statusId).status;
 
-  const themes = await ThemesDB.getThemesList(v);
+  const themes = await ThemesDB.getThemesList(v, req.headers.host);
 
   return res.status(200).send(themes);
 }

@@ -5,7 +5,7 @@ const { Router } = require('express');
 const { replaceAll, saveBase64Image } = require('./../../utils/');
 
 const AdminDB = require('./db');
-const { loginSchema, getUsersSchema, registerUserSchema, deleteUserSchema } = require('./schema');
+const { loginSchema, getUsersSchema, registerUserSchema, getUserByIdSchema, deleteUserSchema } = require('./schema');
 const { APP } = require('../../config');
 
 const roles = {
@@ -92,6 +92,21 @@ const registerUser = async (req, res) => {
   })
 }
 
+const getUserById = async (req, res) => {
+  const { error: err, value: v } = getUserByIdSchema.validate(req.params);
+  if (err) {
+    return res.status(400).send({
+      error: replaceAll(err.details[0].message, '"', ''),
+      warning: '',
+      message: '',
+    });
+  }
+
+  const user = await AdminDB.getUser([v.userId], req.headers.host)
+
+  return res.status(200).send(user);
+}
+
 const deleteUser = async (req, res) => {
   const { error: err, value: v } = deleteUserSchema.validate(req.params);
   if (err) {
@@ -113,6 +128,7 @@ router.post('/login', login);
 router.get('/skills', getSkills);
 router.get('/users/:roleId', getUsers);
 router.post('/register', registerUser);
+router.get('/user/:userId', getUserById);
 router.delete('/user/:userId', deleteUser);
 
 module.exports = router;

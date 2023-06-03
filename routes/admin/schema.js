@@ -23,6 +23,10 @@ const registerUserSchema = Joi.object({
 	skills: Joi.array().items(Joi.number().optional()).optional().allow(null).default(null)
 })
 
+const getUserByIdSchema = Joi.object({
+	userId: Joi.number().required()
+})
+
 const deleteUserSchema = Joi.object({
 	userId: Joi.number().required()
 })
@@ -31,5 +35,6 @@ module.exports = {
 	loginSchema,
 	getUsersSchema,
 	deleteUserSchema,
+	getUserByIdSchema,
 	registerUserSchema
 }

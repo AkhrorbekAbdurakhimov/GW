@@ -1,3 +1,4 @@
+const { param } = require('.');
 const { db } = require('./../../database');
 
 class AdminDB {
@@ -110,6 +111,43 @@ class AdminDB {
 		await db.query(sql, params)
 	}
 
+	static async getUser (params, host) {
+			const sql = `
+				SELECT
+					u.id,
+					username,
+					full_name AS "fullName",
+					TO_CHAR(created_at, 'DD.MM.YYYY HH24:mi:ss') AS "joinedAt",
+					CASE 
+						WHEN avatar IS NOT NULL THEN CONCAT('http://${host}', '/images/', avatar)
+						ELSE NULL 
+					END AS avatar,
+					capacity,
+					r.title AS role,
+					gpa,
+					linkedin,
+					faculty,
+					position,
+					(
+						SELECT
+							ARRAY_AGG(title)
+						FROM
+							diploma.skills
+						WHERE
+							id = ANY (u.skill_ids)
+					) AS skills
+				FROM
+					diploma.users u
+				JOIN
+					diploma.roles r ON r.id = u.role_id
+				WHERE
+					u.id = $1;
+			`;
+
+			const result = await db.query(sql, params);
+			return result.rows && result.rows.length ? result.rows[0] : {}
+	}
+	
 	static async deleteUser (params) {
 		const sql = `
 			DELETE FROM

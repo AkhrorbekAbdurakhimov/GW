@@ -2,7 +2,7 @@ const { db } = require('./../../database');
 
 class ThemesDB {
 
-  static async getThemesList ({ teacherId, studentId, status }) {
+  static async getThemesList ({ teacherId, studentId, status }, host) {
 
     const sql = `
       SELECT	
@@ -13,8 +13,16 @@ class ThemesDB {
         u1.id AS "studentId",
         u1.full_name AS "studentFullName",
         u1.faculty,
+        CASE 
+					WHEN u1.avatar IS NOT NULL THEN CONCAT('http://${host}', '/images/', u1.avatar)
+					ELSE NULL 
+				END AS "studentAvatar",
         u2.id AS "advisorId",
         u2.full_name AS "advisorFullName",
+        CASE 
+					WHEN u2.avatar IS NOT NULL THEN CONCAT('http://${host}', '/images/', u2.avatar)
+					ELSE NULL 
+				END AS "advisorAvatar",
         status,
         TO_CHAR(p.created_at, 'DD.MM.YYYY HH24:mi:ss') AS "createdAt"
       FROM	
