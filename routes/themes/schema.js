@@ -25,4 +25,15 @@ const deleteThemeSchema = Joi.object({
   themeId: Joi.number().required(),
 })
 
-module.exports = { getThemesListSchema, changeThemeStatusSchema, bindStudentSchema, bindStudentSchema, createThemeSchema, deleteThemeSchema }
+const getPerformingSchema = Joi.object({
+  userId: Joi.number().required()
+})
+
+const receiveRequestSchema = Joi.object({
+  requestId: Joi.number().required(),
+  status: Joi.string().allow('declined', 'accepted').required(),
+  done: Joi.number().required(),
+  comment: Joi.string().required()
+})
+
+module.exports = { getThemesListSchema, changeThemeStatusSchema, bindStudentSchema, bindStudentSchema, createThemeSchema, deleteThemeSchema, getPerformingSchema, receiveRequestSchema }

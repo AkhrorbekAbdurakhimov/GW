@@ -34,6 +34,10 @@ const login = async (req, res) => {
 		})
 	}
 
+  const hasThemeRes = await AdminDB.getTheme([user.id]);
+
+  user.hasTheme = !!(hasThemeRes && hasThemeRes.length)
+
 	const token = jwt.sign({ user }, APP.SECRET_KEY, { expiresIn: APP.SESSION_TIMEOUT })
 
 	return res.status(200).send({

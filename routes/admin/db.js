@@ -36,6 +36,20 @@ class AdminDB {
 		return result.rows && result.rows.length ? result.rows[0] : null;
   }
 
+	static async getTheme (params) {
+		const sql = `
+			SELECT
+				*
+			FROM
+				diploma.process
+			WHERE
+				attached_user_id = $1
+		`;
+
+		const result = await db.query(sql, params);
+		return result.rows || [];
+	}
+
 	static async getUsers (role, host) {
 		const sql  = `
 			SELECT

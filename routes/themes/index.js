@@ -1,11 +1,17 @@
 const fs = require('fs');
 const path = require('path');
 
+const { v4: uuidv4 } = require('uuid');
+
 const { Router } = require('express');
+
+const multer = require('multer');
 
 const { db } = require('./../../database');
 const { replaceAll } = require('./../../utils');
-const { getThemesListSchema, changeThemeStatusSchema, bindStudentSchema, createThemeSchema, deleteThemeSchema } = require('./schema');
+const { getThemesListSchema, changeThemeStatusSchema, bindStudentSchema, createThemeSchema, deleteThemeSchema, getPerformingSchema, receiveRequestSchema } = require('./schema');
+
+const upload = multer();
 
 const statuses = [
   { id: 0, status: 'all' },
@@ -77,6 +83,67 @@ const changeThemeStatus = async (req, res) => {
 
   return res.status(200).send({
     message: "Graduation work status changed successfully"
+  })
+}
+
+const getPerforming = async (req, res) => {
+  const { error: err, value: v } = getPerformingSchema.validate(req.params);
+  if (err) {
+    return res.status(400).send({
+      error: replaceAll(err.details[0].message, '"', ''),
+      warning: '',
+      message: '',
+    });
+  }
+
+  const list = await ThemesDB.getPerforming([v.userId], req.headers.host);
+
+  let avarage = 0;
+
+  for (let { details } of list) {
+    avarage += details[details.length - 1].done
+  }
+
+  return res.status(200).send({
+    list,
+    average: avarage / 5
+  })
+}
+
+const sendRequest = async (req, res) => {
+
+  let filename = null;
+
+  if (req.files && req.files.length) {
+    try {
+      filename = `${uuidv4()}${path.extname(req.files[0].originalname)}`
+      fs.writeFileSync(path.join(process.cwd(), 'public', 'files', filename), req.files[0].buffer)
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  await ThemesDB.sendRequest([filename, req.body.typeId, req.user.id]);
+
+  return res.status(200).send({
+    message: 'File send successfully'
+  })
+}
+
+const receiveRequest = async (req, res) => {
+  const { error: err, value: v } = receiveRequestSchema.validate(req.body);
+  if (err) {
+    return res.status(400).send({
+      error: replaceAll(err.details[0].message, '"', ''),
+      warning: '',
+      message: '',
+    });
+  }
+
+  await ThemesDB.receiveRequest([v.requestId, v.status, v.done, v.comment]);
+
+  return res.status(200).send({
+    message: "Process peformed successfully"
   })
 }
 
@@ -202,7 +269,11 @@ const router = Router();
 router.get('/list', getThemesList);
 router.post('/bind', bindStudent);
 router.get('/status/list', getStatusesList);
-router.patch('/status/:processId', changeThemeStatus)
+router.patch('/status/:processId', changeThemeStatus);
+
+router.get('/performing/:userId', getPerforming);
+router.post('/performing/send-request', upload.any(), sendRequest);
+router.post('/performing/recieve-request', receiveRequest);
 
 router.post('/', createTheme);
 router.delete('/:themeId', deleteTheme)

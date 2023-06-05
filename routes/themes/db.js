@@ -3,7 +3,6 @@ const { db } = require('./../../database');
 class ThemesDB {
 
   static async getThemesList ({ teacherId, studentId, status }, host) {
-
     const sql = `
       SELECT	
         t.id,
@@ -67,6 +66,65 @@ class ThemesDB {
       WHERE
         id = $1
     `, params)
+  }
+
+  static async getPerforming (params, host) {
+    const sql = `
+      SELECT
+        p1.id,
+        title,
+        JSON_AGG(
+          JSONB_BUILD_OBJECT(
+            'id', p2.id,
+            'link', CASE 
+              WHEN p2.filename IS NOT NULL THEN CONCAT('http://${host}/files/', p2.filename)
+              ELSE NULL END,
+            'filename', p2.filename,
+            'done', p2.done_percentage,
+            'created_date', TO_CHAR(p2.created_date, 'DD.MM.YYYY HH24:mi:ss'),
+            'comment', p2.comment,
+            'status', p2.status
+          ) ORDER BY p2.created_date
+        ) AS details
+      FROM
+        diploma.phases p1
+      LEFT JOIN
+        diploma.performing p2 ON p1.id = p2.phase_id AND user_id = $1
+      GROUP BY
+        p1.id,
+        p1.title
+    `;
+
+    const result = await db.query(sql, params);
+    return result.rows || []
+  }
+
+  static async sendRequest (params) {
+    const sql = `
+      INSERT INTO diploma.performing (
+        filename,
+        phase_id,
+        user_id
+      ) VALUES (
+        $1, $2, $3
+      ) RETURNING id;
+    `;
+
+    await db.query(sql, params);
+  }
+
+  static async receiveRequest (params) {
+    const sql = `
+      UPDATE
+        diploma.performing
+      SET
+        status = $2,
+        done_percentage = $3,
+        comment = $4
+      WHERE
+        id = $1
+    `;
+    await db.query(sql, params)
   }
 
 }
