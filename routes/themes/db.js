@@ -127,6 +127,32 @@ class ThemesDB {
     await db.query(sql, params)
   }
 
+  static async getNews () {
+    const sql = `
+      SELECT
+        id,
+        body,
+        TO_CHAR(created_datetime, 'DD.MM.YYYY HH24:mi:ss') AS created_datetime
+      FROM  
+        diploma.news
+    `;
+
+    const result = await db.query(sql);
+    return result.rows || []
+  }
+
+  static async addNews (params) {
+    const sql = `
+      INSERT into diploma.news (
+        body
+      ) VALUES (
+        $1
+      ) RETURNING id
+    `;
+
+    await db.query(sql, params);
+  }
+
 }
 
 module.exports = ThemesDB;

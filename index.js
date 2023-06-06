@@ -9,7 +9,7 @@ const app = express();
 const { APP } = require('./config');
 const { authMiddleware } = require('./middlewares/auth');
 
-app.use('/', express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cors());
 app.use(helmet());

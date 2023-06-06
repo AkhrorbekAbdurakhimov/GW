@@ -36,4 +36,8 @@ const receiveRequestSchema = Joi.object({
   comment: Joi.string().required()
 })
 
-module.exports = { getThemesListSchema, changeThemeStatusSchema, bindStudentSchema, bindStudentSchema, createThemeSchema, deleteThemeSchema, getPerformingSchema, receiveRequestSchema }
+const addNewsSchema = Joi.object({
+  body: Joi.string().required()
+})
+
+module.exports = { getThemesListSchema, changeThemeStatusSchema, bindStudentSchema, bindStudentSchema, createThemeSchema, deleteThemeSchema, getPerformingSchema, receiveRequestSchema, addNewsSchema }

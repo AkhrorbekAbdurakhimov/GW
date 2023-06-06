@@ -9,7 +9,7 @@ const multer = require('multer');
 
 const { db } = require('./../../database');
 const { replaceAll } = require('./../../utils');
-const { getThemesListSchema, changeThemeStatusSchema, bindStudentSchema, createThemeSchema, deleteThemeSchema, getPerformingSchema, receiveRequestSchema } = require('./schema');
+const { getThemesListSchema, changeThemeStatusSchema, bindStudentSchema, createThemeSchema, deleteThemeSchema, getPerformingSchema, receiveRequestSchema, addNewsSchema } = require('./schema');
 
 const upload = multer();
 
@@ -264,6 +264,28 @@ const deleteTheme = async (req, res) => {
 
 }
 
+const getNews = async (req, res) => {
+  const news = await ThemesDB.getNews();
+  return res.status(200).send(news)
+}
+
+const addNews = async (req, res) => {
+  const { error: err, value: v } = addNewsSchema.validate(req.body);
+  if (err) {
+    return res.status(400).send({
+      error: replaceAll(err.details[0].message, '"', ''),
+      warning: '',
+      message: '',
+    });
+  }
+
+  await ThemesDB.addNews([v.body]);
+
+  return res.status(200).send({
+    message: "News added successfully"
+  })
+}
+
 const router = Router();
 
 router.get('/list', getThemesList);
@@ -277,5 +299,8 @@ router.post('/performing/recieve-request', receiveRequest);
 
 router.post('/', createTheme);
 router.delete('/:themeId', deleteTheme)
+
+router.get('/news', getNews)
+router.post('/news', addNews)
 
 module.exports = router;
